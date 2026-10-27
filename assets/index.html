@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,22 +14,35 @@
     <h1>Weather Forecast</h1>
 </header>
 
-<section>
-  
+<section class="location">
+  <h2 id="city">Current Location</h2>
+  <p id="date"></p>
 </section>
 
 
 
-<section>
+<section class="weather">
+<p id="current-weather">Current Weather</p>
 
+<button id="switch-unit" type="button">Switch to °F</button>
 </section>
 
 
 
-<section>
+<section class="forecast">
+  <h2>7-Day Forecast</h2>
 
+  <div id="forecast-container"></div>
 </section>
 
 </main>
+
+
+<footer>
+  <p></p>
+</footer>
+
+
+
 </body>
 </html>
