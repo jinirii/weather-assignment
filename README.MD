@@ -19,12 +19,14 @@ Technologies Used for the Assignment
 - CSS
 - JavaScript
 - WeatherAPI
+- Figma
 
 Used sources
 - Given API
 - Ai
 - W3schools
 - In class code examples
+- Figma link and icons
 
 AI Usage
 The AI used in this assignment was primarily to guide me. It was also used to teach me new JS, clarify topics that I wanted to add but didn't fully understand on my own, and helped me find solutions to problems I couldn't solve.
