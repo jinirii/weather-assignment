@@ -1,4 +1,3 @@
-
 const apiKey = "acf69a844df44f8abb102319262710";
 const city = "Calgary";
 
@@ -14,6 +13,9 @@ let forecastData;
 async function getWeather() {
     const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=no&alerts=no`;
 
+    currentWeather.textContent = "Loading weather...";
+    forecastContainer.textContent = "Loading forecast...";
+
     try {
         const response = await fetch(url);
         const data = await response.json();
@@ -22,16 +24,32 @@ async function getWeather() {
             forecastData = data;
             displayWeather();
         } else {
-            console.log("Weather could not be loaded.");
+            currentWeather.textContent =
+                "Weather could not be loaded. Please try again.";
+            forecastContainer.textContent = "";
+            console.log(data);
         }
     } catch (error) {
-        console.log("Something went wrong.");
+        currentWeather.textContent =
+            "Something went wrong. Check your internet connection and try again.";
+        forecastContainer.textContent = "";
+        console.log(error);
     }
 }
 
 function displayWeather() {
+    if (forecastData.current.is_day == 1) {
+        document.body.classList.remove("night");
+    } else {
+        document.body.classList.add("night");
+    }
+
     cityElement.textContent = forecastData.location.name;
-    dateElement.textContent = new Date(forecastData.location.localtime).toDateString();
+
+    dateElement.textContent = formatDate(
+        forecastData.location.localtime.split(" ")[0],
+        true
+    );
 
     let temperature;
 
@@ -46,7 +64,7 @@ function displayWeather() {
             src="${getWeatherIcon(forecastData.current.condition.text)}"
             alt="${forecastData.current.condition.text}"
         >
-        <h3>${temperature}°${isCelsius ? "C" : "F"}</h3>
+        <h3>${Math.round(temperature)}°${isCelsius ? "C" : "F"}</h3>
         <p>${forecastData.current.condition.text}</p>
     `;
 
@@ -75,18 +93,42 @@ function displayForecast() {
         forecastCard.classList.add("forecast-card");
 
         forecastCard.innerHTML = `
-            <h3>${day.date}</h3>
+            <h3>${formatDate(day.date, false)}</h3>
             <img
                 src="${getWeatherIcon(day.day.condition.text)}"
                 alt="${day.day.condition.text}"
             >
             <p>${day.day.condition.text}</p>
-            <p>Average: ${averageTemperature}°${isCelsius ? "C" : "F"}</p>
-            <p>High: ${highTemperature}°${isCelsius ? "C" : "F"}</p>
-            <p>Low: ${lowTemperature}°${isCelsius ? "C" : "F"}</p>
+            <p>Average: ${Math.round(averageTemperature)}°${isCelsius ? "C" : "F"}</p>
+            <p>High: ${Math.round(highTemperature)}°${isCelsius ? "C" : "F"}</p>
+            <p>Low: ${Math.round(lowTemperature)}°${isCelsius ? "C" : "F"}</p>
         `;
 
         forecastContainer.appendChild(forecastCard);
+    }
+}
+
+function formatDate(dateString, showFullDate) {
+    const dateParts = dateString.split("-");
+    const date = new Date(
+        Number(dateParts[0]),
+        Number(dateParts[1]) - 1,
+        Number(dateParts[2])
+    );
+
+    if (showFullDate) {
+        return date.toLocaleDateString("en-CA", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        });
+    } else {
+        return date.toLocaleDateString("en-CA", {
+            weekday: "short",
+            month: "short",
+            day: "numeric"
+        });
     }
 }
 
@@ -107,18 +149,20 @@ switchButton.addEventListener("click", function() {
 function getWeatherIcon(condition) {
     condition = condition.toLowerCase();
 
-    if (condition.includes("freezing rain")) {
-        return "assets/icons/rain.svg";
+    if (condition.includes("thunder")) {
+        return "assets/icons/thunderstorm.svg";
     } else if (
         condition.includes("rain") ||
         condition.includes("drizzle") ||
-        condition.includes("showers")
+        condition.includes("shower")
     ) {
-        return "assets/icons/rainy.svg";
+        return "assets/icons/rain.svg";
     } else if (
         condition.includes("snow") ||
         condition.includes("sleet") ||
-        condition.includes("ice")
+        condition.includes("ice") ||
+        condition.includes("blizzard") ||
+        condition.includes("freezing")
     ) {
         return "assets/icons/snow.svg";
     } else if (
