@@ -125,19 +125,17 @@ footer h2 {
     font-weight: bold;
 }
 
-/* Daytime icon colour */
 #current-weather img,
 .forecast-card img {
     filter: brightness(0) saturate(100%) invert(29%) sepia(18%) saturate(1750%) hue-rotate(184deg);
 }
 
-/* Nighttime icon colour */
+
 body.night #current-weather img,
 body.night .forecast-card img {
     filter: brightness(0) invert(1);
 }
 
-/* Tablet: 640px and wider */
 @media (min-width: 640px) {
     #forecast-container {
         grid-template-columns: repeat(2, 1fr);
@@ -154,7 +152,6 @@ body.night .forecast-card img {
     }
 }
 
-/* Desktop / PC: 960px and wider */
 @media (min-width: 960px) {
     #forecast-container {
         grid-template-columns: repeat(12, 1fr);
@@ -169,7 +166,6 @@ body.night .forecast-card img {
     }
 }
 
-/* Nighttime colours */
 body.night {
     background-color: #17243b;
     color: #ffffff;
