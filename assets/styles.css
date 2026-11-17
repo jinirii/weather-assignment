@@ -154,17 +154,21 @@ body.night .forecast-card img {
 
 @media (min-width: 960px) {
     #forecast-container {
-        grid-template-columns: repeat(12, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .forecast-card {
-        grid-column: span 3;
+        grid-column: span 1;
     }
 
     .forecast-card:nth-child(5) {
-        grid-column: 2 / span 3;
+        grid-column: 2;
     }
 }
+/* 
+Better alignment for the forecast card when it comes to desk top screens
+*/
+
 
 body.night {
     background-color: #17243b;

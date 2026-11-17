@@ -1,121 +1,140 @@
+// API
+// .env file created to store the api
 const apiKey = "acf69a844df44f8abb102319262710";
 const city = "Calgary";
-
+// added types to html elements
 const cityElement = document.querySelector("#city");
 const dateElement = document.querySelector("#date");
 const currentWeather = document.querySelector("#current-weather");
 const switchButton = document.querySelector("#switch");
 const forecastContainer = document.querySelector("#forecast-container");
-
+const forecastTitle = document.querySelector(".forecast h2");
+// check if the required html elements exist
+if (cityElement === null ||
+    dateElement === null ||
+    currentWeather === null ||
+    switchButton === null ||
+    forecastContainer === null ||
+    forecastTitle === null) {
+    throw new Error("Required HTML elements could not be found.");
+}
+// Application
 let isCelsius = true;
-let forecastData;
-
+let forecastData = null;
+// organized weather icon rules into a lookup array
+const weatherIconRules = [
+    {
+        keywords: ["thunder"],
+        icon: "assets/icons/thunderstorm.svg"
+    },
+    {
+        keywords: ["rain", "drizzle", "shower"],
+        icon: "assets/icons/rain.svg"
+    },
+    {
+        keywords: ["snow", "sleet", "ice", "blizzard", "freezing"],
+        icon: "assets/icons/snow.svg"
+    },
+    {
+        keywords: ["cloud", "overcast", "mist", "fog"],
+        icon: "assets/icons/cloudy.svg"
+    }
+];
 async function getWeather() {
     const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=no&alerts=no`;
-
     currentWeather.textContent = "Loading weather...";
     forecastContainer.textContent = "Loading forecast...";
-
     try {
         const response = await fetch(url);
-        const data = await response.json();
-
-        if (response.ok) {
-            forecastData = data;
-            displayWeather();
-        } else {
-            currentWeather.textContent =
-                "Weather could not be loaded. Please try again.";
-            forecastContainer.textContent = "";
-            console.log(data);
+        if (!response.ok) {
+            throw new Error(`Weather request failed: ${response.status}`);
         }
-    } catch (error) {
+        // typed the api response before using it
+        const data = await response.json();
+        forecastData = data;
+        displayWeather();
+        // better error handling for API errors
+    }
+    catch (error) {
         currentWeather.textContent =
-            "Something went wrong. Check your internet connection and try again.";
+            "Weather could not be loaded. Please try again.";
         forecastContainer.textContent = "";
-        console.log(error);
+        // api errors easier to find and fix
+        console.error("Error retrieving weather:", error);
     }
 }
-
 function displayWeather() {
-    if (forecastData.current.is_day == 1) {
+    if (forecastData === null) {
+        return;
+    }
+    // theme change based on day or night
+    if (forecastData.current.is_day === 1) {
         document.body.classList.remove("night");
-    } else {
+    }
+    else {
         document.body.classList.add("night");
     }
-
     cityElement.textContent = forecastData.location.name;
-
-    dateElement.textContent = formatDate(
-        forecastData.location.localtime.split(" ")[0],
-        true
-    );
-
-    let temperature;
-
-    if (isCelsius) {
-        temperature = forecastData.current.temp_c;
-    } else {
-        temperature = forecastData.current.temp_f;
-    }
-
-    currentWeather.innerHTML = `
-        <img
-            src="${getWeatherIcon(forecastData.current.condition.text)}"
-            alt="${forecastData.current.condition.text}"
-        >
-        <h3>${Math.round(temperature)}°${isCelsius ? "C" : "F"}</h3>
-        <p>${forecastData.current.condition.text}</p>
-    `;
-
+    const localDate = forecastData.location.localtime.split(" ")[0];
+    dateElement.textContent = formatDate(localDate, true);
+    const temperature = isCelsius
+        ? forecastData.current.temp_c
+        : forecastData.current.temp_f;
+    const weatherIcon = document.createElement("img");
+    weatherIcon.src = getWeatherIcon(forecastData.current.condition.text);
+    weatherIcon.alt = forecastData.current.condition.text;
+    const temperatureElement = document.createElement("h3");
+    temperatureElement.textContent =
+        `${Math.round(temperature)}°${isCelsius ? "C" : "F"}`;
+    const conditionElement = document.createElement("p");
+    conditionElement.textContent = forecastData.current.condition.text;
+    currentWeather.replaceChildren(weatherIcon, temperatureElement, conditionElement);
     displayForecast();
 }
-
 function displayForecast() {
-    forecastContainer.innerHTML = "";
-
-    for (const day of forecastData.forecast.forecastday) {
-        let averageTemperature;
-        let highTemperature;
-        let lowTemperature;
-
-        if (isCelsius) {
-            averageTemperature = day.day.avgtemp_c;
-            highTemperature = day.day.maxtemp_c;
-            lowTemperature = day.day.mintemp_c;
-        } else {
-            averageTemperature = day.day.avgtemp_f;
-            highTemperature = day.day.maxtemp_f;
-            lowTemperature = day.day.mintemp_f;
-        }
-
+    if (forecastData === null) {
+        return;
+    }
+    forecastContainer.replaceChildren();
+    const forecastDays = forecastData.forecast.forecastday;
+    // show the actual number of forecast days
+    forecastTitle.textContent = `${forecastDays.length}-Day Forecast`;
+    for (const day of forecastDays) {
+        const averageTemperature = isCelsius
+            ? day.day.avgtemp_c
+            : day.day.avgtemp_f;
+        const highTemperature = isCelsius
+            ? day.day.maxtemp_c
+            : day.day.maxtemp_f;
+        const lowTemperature = isCelsius
+            ? day.day.mintemp_c
+            : day.day.mintemp_f;
         const forecastCard = document.createElement("article");
         forecastCard.classList.add("forecast-card");
-
-        forecastCard.innerHTML = `
-            <h3>${formatDate(day.date, false)}</h3>
-            <img
-                src="${getWeatherIcon(day.day.condition.text)}"
-                alt="${day.day.condition.text}"
-            >
-            <p>${day.day.condition.text}</p>
-            <p>Average: ${Math.round(averageTemperature)}°${isCelsius ? "C" : "F"}</p>
-            <p>High: ${Math.round(highTemperature)}°${isCelsius ? "C" : "F"}</p>
-            <p>Low: ${Math.round(lowTemperature)}°${isCelsius ? "C" : "F"}</p>
-        `;
-
+        const dayHeading = document.createElement("h3");
+        dayHeading.textContent = formatDate(day.date, false);
+        const weatherIcon = document.createElement("img");
+        weatherIcon.src = getWeatherIcon(day.day.condition.text);
+        weatherIcon.alt = day.day.condition.text;
+        const conditionElement = document.createElement("p");
+        conditionElement.textContent = day.day.condition.text;
+        const averageElement = document.createElement("p");
+        averageElement.textContent =
+            `Average: ${Math.round(averageTemperature)}°${isCelsius ? "C" : "F"}`;
+        const highElement = document.createElement("p");
+        highElement.textContent =
+            `High: ${Math.round(highTemperature)}°${isCelsius ? "C" : "F"}`;
+        const lowElement = document.createElement("p");
+        lowElement.textContent =
+            `Low: ${Math.round(lowTemperature)}°${isCelsius ? "C" : "F"}`;
+        forecastCard.append(dayHeading, weatherIcon, conditionElement, averageElement, highElement, lowElement);
         forecastContainer.appendChild(forecastCard);
     }
 }
-
+// format the date to be more readable
 function formatDate(dateString, showFullDate) {
     const dateParts = dateString.split("-");
-    const date = new Date(
-        Number(dateParts[0]),
-        Number(dateParts[1]) - 1,
-        Number(dateParts[2])
-    );
-
+    const date = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
     if (showFullDate) {
         return date.toLocaleDateString("en-CA", {
             weekday: "long",
@@ -123,58 +142,30 @@ function formatDate(dateString, showFullDate) {
             day: "numeric",
             year: "numeric"
         });
-    } else {
-        return date.toLocaleDateString("en-CA", {
-            weekday: "short",
-            month: "short",
-            day: "numeric"
-        });
     }
+    return date.toLocaleDateString("en-CA", {
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+    });
 }
-
-switchButton.addEventListener("click", function() {
-    isCelsius = !isCelsius;
-
-    if (isCelsius) {
-        switchButton.textContent = "Switch to °F";
-    } else {
-        switchButton.textContent = "Switch to °C";
+function getWeatherIcon(condition) {
+    const lowerCondition = condition.toLowerCase();
+    // use find and some to match weather conditions with icons
+    const matchingRule = weatherIconRules.find((rule) => rule.keywords.some((keyword) => lowerCondition.includes(keyword)));
+    if (matchingRule) {
+        return matchingRule.icon;
     }
-
-    if (forecastData) {
+    return "assets/icons/sunny.svg";
+}
+switchButton.addEventListener("click", () => {
+    isCelsius = !isCelsius;
+    switchButton.textContent = isCelsius
+        ? "Switch to °F"
+        : "Switch to °C";
+    if (forecastData !== null) {
         displayWeather();
     }
 });
-
-function getWeatherIcon(condition) {
-    condition = condition.toLowerCase();
-
-    if (condition.includes("thunder")) {
-        return "assets/icons/thunderstorm.svg";
-    } else if (
-        condition.includes("rain") ||
-        condition.includes("drizzle") ||
-        condition.includes("shower")
-    ) {
-        return "assets/icons/rain.svg";
-    } else if (
-        condition.includes("snow") ||
-        condition.includes("sleet") ||
-        condition.includes("ice") ||
-        condition.includes("blizzard") ||
-        condition.includes("freezing")
-    ) {
-        return "assets/icons/snow.svg";
-    } else if (
-        condition.includes("cloud") ||
-        condition.includes("overcast") ||
-        condition.includes("mist") ||
-        condition.includes("fog")
-    ) {
-        return "assets/icons/cloudy.svg";
-    } else {
-        return "assets/icons/sunny.svg";
-    }
-}
-
 getWeather();
+export {};
